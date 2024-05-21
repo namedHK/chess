@@ -177,14 +177,6 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
         anew.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                //注册棋子移动监听
-//                for (int j=0;j<32;j++){
-//                    con.remove(play[j]);
-//                }
-//                con.repaint();
-
-
                 chessPlayClick = 2;
                 TimeSettingDialog dialog = new TimeSettingDialog(ChessMainFrame.this);
                 dialog.setVisible(true);
@@ -198,7 +190,21 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
                     startGameTimer();
                 }
 
+
+                // 移除所有棋子
+                for (JLabel chessPiece : play) {
+                    con.remove(chessPiece);
+                }
+                con.remove(image);
+                con.repaint();
+
+                // 可以在这里添加代码计算新的位置，本例中暂不处理位置计算
                 drawChessMan();
+
+                //注册棋子移动监听
+                con.add(image);
+                con.revalidate(); // 通知布局管理器重新布局 Container
+                con.repaint(); // 重绘 Container 以显示更新后的组件
 
                 Message move = new Message();
                 move.MsgTYpe = 4;
@@ -303,6 +309,134 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
         startOnline(playType);
 	}
 
+    /**
+     ** 添加棋子方法
+     */
+    public void drawChessMan(){
+        //流程控制
+        int i,k;
+        //图标
+        Icon in;
+
+        //黑色棋子
+
+        //车
+        in = new ImageIcon("image" + File.separator + "黑车.GIF");
+        for (i=0,k=24;i<2;i++,k+=456){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,56,55,55);
+            play[i].setName("车1");
+        }
+
+        //马
+        in = new ImageIcon("image" + File.separator + "黑马.GIF");
+        for (i=4,k=81;i<6;i++,k+=342){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,56,55,55);
+            play[i].setName("马1");
+        }
+
+        //相
+        in = new ImageIcon("image" + File.separator + "黑象.GIF");
+        for (i=8,k=138;i<10;i++,k+=228){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,56,55,55);
+            play[i].setName("象1");
+        }
+
+        //士
+        in = new ImageIcon("image" + File.separator + "黑士.GIF");
+        for (i=12,k=195;i<14;i++,k+=114){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,56,55,55);
+            play[i].setName("士1");
+        }
+
+        //卒
+        in = new ImageIcon("image" + File.separator + "黑卒.GIF");
+        for (i=16,k=24;i<21;i++,k+=114){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,227,55,55);
+            play[i].setName("卒1" + i);
+        }
+
+        //炮
+        in = new ImageIcon("image" + File.separator + "黑炮.GIF");
+        for (i=26,k=81;i<28;i++,k+=342){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,170,55,55);
+            play[i].setName("炮1" + i);
+        }
+
+        //将
+        in = new ImageIcon("image" + File.separator + "黑将.GIF");
+        play[30] = new JLabel(in);
+        play[30].setBounds(252,56,55,55);
+        play[30].setName("将1");
+
+        //红色棋子
+        //车
+        in = new ImageIcon("image" + File.separator + "红车.GIF");
+        for (i=2,k=24;i<4;i++,k+=456){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,569,55,55);
+            play[i].setName("车2");
+        }
+
+        //马
+        in = new ImageIcon("image" + File.separator + "红马.GIF");
+        for (i=6,k=81;i<8;i++,k+=342){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,569,55,55);
+            play[i].setName("马2");
+        }
+
+        //相
+        in = new ImageIcon("image" + File.separator + "红象.GIF");
+        for (i=10,k=138;i<12;i++,k+=228){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,569,55,55);
+            play[i].setName("象2");
+        }
+
+        //士
+        in = new ImageIcon("image" + File.separator + "红士.GIF");
+        for (i=14,k=195;i<16;i++,k+=114){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,569,55,55);
+            play[i].setName("士2");
+        }
+
+        //兵
+        in = new ImageIcon("image" + File.separator + "红卒.GIF");
+        for (i=21,k=24;i<26;i++,k+=114){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,398,55,55);
+            play[i].setName("卒2" + i);
+        }
+
+        //炮
+        in = new ImageIcon("image" + File.separator + "红炮.GIF");
+        for (i=28,k=81;i<30;i++,k+=342){
+            play[i] = new JLabel(in);
+            play[i].setBounds(k,455,55,55);
+            play[i].setName("炮2" + i);
+        }
+
+        //帅
+        in = new ImageIcon("image" + File.separator + "红将.GIF");
+        play[31] = new JLabel(in);
+        play[31].setBounds(252,569,55,55);
+        play[31].setName("帅2");
+
+        //注册棋子移动监听
+        for (int j=0;j<32;j++){
+            con.add(play[j]);
+            play[j].addMouseListener(this);
+        }
+
+    }
+
     // 启动整局游戏的计时器
     public void startGameTimer() {
         gameTimer = new Timer();
@@ -383,133 +517,6 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
         }
     }
 
-    /**
-	** 添加棋子方法
-	*/
-	public void drawChessMan(){
-		//流程控制
-		int i,k;
-		//图标
-		Icon in;
-				
-		//黑色棋子
-		
-		//车
-		in = new ImageIcon("image" + File.separator + "黑车.GIF");
-		for (i=0,k=24;i<2;i++,k+=456){		
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,56,55,55);	
-			play[i].setName("车1");			
-		}	
-		
-		//马
-		in = new ImageIcon("image" + File.separator + "黑马.GIF");
-		for (i=4,k=81;i<6;i++,k+=342){	
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,56,55,55);
-			play[i].setName("马1");
-		}
-		
-		//相
-		in = new ImageIcon("image" + File.separator + "黑象.GIF");
-		for (i=8,k=138;i<10;i++,k+=228){	
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,56,55,55);
-			play[i].setName("象1");
-		}
-		
-		//士
-		in = new ImageIcon("image" + File.separator + "黑士.GIF");
-		for (i=12,k=195;i<14;i++,k+=114){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,56,55,55);
-			play[i].setName("士1");
-		}
-		
-		//卒
-		in = new ImageIcon("image" + File.separator + "黑卒.GIF");
-		for (i=16,k=24;i<21;i++,k+=114){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,227,55,55);
-			play[i].setName("卒1" + i);
-		}
-		
-		//炮
-		in = new ImageIcon("image" + File.separator + "黑炮.GIF");			
-		for (i=26,k=81;i<28;i++,k+=342){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,170,55,55);
-			play[i].setName("炮1" + i);
-		}
-		
-		//将
-		in = new ImageIcon("image" + File.separator + "黑将.GIF");
-		play[30] = new JLabel(in);
-		play[30].setBounds(252,56,55,55);
-		play[30].setName("将1");
-
-		//红色棋子
-		//车
-		in = new ImageIcon("image" + File.separator + "红车.GIF");
-		for (i=2,k=24;i<4;i++,k+=456){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,569,55,55);
-			play[i].setName("车2");
-		}
-		
-		//马
-		in = new ImageIcon("image" + File.separator + "红马.GIF");
-		for (i=6,k=81;i<8;i++,k+=342){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,569,55,55);
-			play[i].setName("马2");
-		}
-		
-		//相
-		in = new ImageIcon("image" + File.separator + "红象.GIF");			
-		for (i=10,k=138;i<12;i++,k+=228){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,569,55,55);
-			play[i].setName("象2");
-		}
-		
-		//士
-		in = new ImageIcon("image" + File.separator + "红士.GIF");
-		for (i=14,k=195;i<16;i++,k+=114){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,569,55,55);
-			play[i].setName("士2");
-		}
-		
-		//兵
-		in = new ImageIcon("image" + File.separator + "红卒.GIF");
-		for (i=21,k=24;i<26;i++,k+=114){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,398,55,55);
-			play[i].setName("卒2" + i);
-		}
-		
-		//炮
-		in = new ImageIcon("image" + File.separator + "红炮.GIF");
-		for (i=28,k=81;i<30;i++,k+=342){
-			play[i] = new JLabel(in);
-			play[i].setBounds(k,455,55,55);
-			play[i].setName("炮2" + i);
-		}
-		
-		//帅
-		in = new ImageIcon("image" + File.separator + "红将.GIF");			
-		play[31] = new JLabel(in);
-		play[31].setBounds(252,569,55,55);		
-		play[31].setName("帅2");
-
-        //注册棋子移动监听
-        for (int j=0;j<32;j++){
-            con.add(play[j]);
-            play[j].addMouseListener(this);
-        }
-
-	}
 	
 	/**
 	** 线程方法控制棋子闪烁
