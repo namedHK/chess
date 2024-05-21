@@ -43,7 +43,13 @@ public class Chess{
 
 	public static void main(String args[]){
         int playType = args.length > 0  ? Integer.parseInt(args[0]) : 3;
-		new ChessMainFrame("java中国象棋对弈" + title.get(args[0]) , playType);
+        String server = null;
+        if(playType == 2){
+            server = args[1];
+        }
+
+        ChessMainFrame frame = new ChessMainFrame("java中国象棋对弈" + title.get(args[0]) , playType, server);
+
 	}
 }
 
@@ -149,7 +155,7 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 	** 构造函数
 	** 初始化图形用户界面
 	*/
-	ChessMainFrame(String Title, int playType){
+	ChessMainFrame(String Title, int playType, String serverStr){
         this.playType = playType;
 		//改变系统默认字体
 		Font font = new Font("Dialog", Font.PLAIN, 12);
@@ -306,7 +312,7 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 		this.setSize(558,670);
 		this.show();
 
-        startOnline(playType);
+        startOnline(playType, serverStr);
 	}
 
     /**
@@ -483,7 +489,7 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 
 
 
-    public void startOnline(int playType) {
+    public void startOnline(int playType, String serverStr) {
         if (playType == 1) {
             try {
                 server = new ChessServer(12345, this);
@@ -499,7 +505,7 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
             }
         } else if(playType == 2){
             try {
-                client = new ChessClient("localhost", 12345);
+                client = new ChessClient(serverStr, 12345);
                 new Thread(() -> {
                     try {
                         while (true) {
