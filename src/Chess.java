@@ -183,34 +183,10 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
         anew.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chessPlayClick = 2;
-                TimeSettingDialog dialog = new TimeSettingDialog(ChessMainFrame.this);
-                dialog.setVisible(true);
-                long[] timeLimits = dialog.getTimeLimits();
-                if (timeLimits[0] > 0) {
-                    moveTimeLimit = timeLimits[0];
-                    startMoveTimer();
-                }
-                if (timeLimits[1] > 0) {
-                    gameTimeLimit = timeLimits[1];
-                    startGameTimer();
-                }
 
+                startGameTitle();
 
-                // 移除所有棋子
-                for (JLabel chessPiece : play) {
-                    con.remove(chessPiece);
-                }
-                con.remove(image);
-                con.repaint();
-
-                // 可以在这里添加代码计算新的位置，本例中暂不处理位置计算
-                drawChessMan();
-
-                //注册棋子移动监听
-                con.add(image);
-                con.revalidate(); // 通知布局管理器重新布局 Container
-                con.repaint(); // 重绘 Container 以显示更新后的组件
+                panelRepaint();
 
                 Message move = new Message();
                 move.MsgTYpe = 4;
@@ -223,9 +199,8 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
                     client.sendMove(move);
                 }
 
-
-
             }
+
         });
 
 		anew.setToolTipText("重新开始新的一局");
@@ -313,7 +288,42 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 		this.show();
 
         startOnline(playType, serverStr);
+
+        startGameTitle();
 	}
+
+    private void startGameTitle() {
+        TimeSettingDialog dialog = new TimeSettingDialog(ChessMainFrame.this);
+        dialog.setVisible(true);
+        long[] timeLimits = dialog.getTimeLimits();
+        if (timeLimits[0] > 0) {
+            moveTimeLimit = timeLimits[0];
+            startMoveTimer();
+        }
+        if (timeLimits[1] > 0) {
+            gameTimeLimit = timeLimits[1];
+            startGameTimer();
+        }
+    }
+
+    public void panelRepaint() {
+        chessPlayClick = 2;
+
+        // 移除所有棋子
+        for (JLabel chessPiece : play) {
+            con.remove(chessPiece);
+        }
+        con.remove(image);
+        con.repaint();
+
+        // 可以在这里添加代码计算新的位置，本例中暂不处理位置计算
+        drawChessMan();
+
+        //注册棋子移动监听
+        con.add(image);
+        con.revalidate(); // 通知布局管理器重新布局 Container
+        con.repaint(); // 重绘 Container 以显示更新后的组件
+    }
 
     /**
      ** 添加棋子方法
@@ -944,6 +954,7 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 
                 Message msg = new Message();
                 msg.MsgTYpe = 2;
+                msg.chessPlayClick = chessPlayClick;
                 //网络对战
                 if(server != null){
                     server.sendMove(msg);

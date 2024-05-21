@@ -22,11 +22,11 @@ public class EventUtils {
         if(me.MsgTYpe == 1) {
             frame.move(me.mouseEvent(), me.moveType, me.movePiece);
         }else if(me.MsgTYpe == 2){
-            if(frame.chessPlayClick == 2){
+            if(me.chessPlayClick == 1){
                 JOptionPane.showConfirmDialog(
                         frame,"ºìÆìÊ¤Àû","ºìÆìÊ¤Àû",
                         JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
-            }else if( frame.chessPlayClick == 1){
+            }else if( me.chessPlayClick == 2){
                 JOptionPane.showConfirmDialog(
                         frame,"ºÚÆìÊ¤Àû","ºÚÆìÊ¤Àû",
                         JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
@@ -38,8 +38,7 @@ public class EventUtils {
         }else if(me.MsgTYpe == 4){
             frame.moveTimeLimit = me.moveTimeLimit;
             frame.gameTimeLimit = me.gameTimeLimit;
-            frame.startGameTimer();
-            frame.startMoveTimer();
+            frame.panelRepaint();
         }
     }
 }

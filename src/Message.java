@@ -51,6 +51,11 @@ public class Message implements Serializable {
      */
     long gameTimeLimit;
 
+    /**
+     * ÈÏÊäÍæ¼Ò
+     */
+    int chessPlayClick;
+
     public MouseEvent mouseEvent(){
         return mouseEvent;
     }
