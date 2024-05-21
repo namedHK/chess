@@ -3,6 +3,8 @@
  *添加功能:实现了当前棋局的保存
  */
 
+import compont.TimeSettingDialog;
+
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -17,9 +19,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -65,8 +65,10 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
     JButton fail;
     //和棋
     JButton peace;
-
-
+    //记录
+    JButton log;
+    //帮助
+    JButton help;
 	//退出
 	JButton exit;
 	//当前信息
@@ -91,7 +93,7 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 	** chessPlayClick=2 红棋走棋 默认红棋
 	** chessPlayClick=3 双方都不能走棋
 	*/
-	int chessPlayClick=2;
+	public int chessPlayClick=2;
 	
 	//控制棋子闪烁的线程
 	Thread tmain;
@@ -106,14 +108,49 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
      */
     private int playType = 3;
 
-    private int currentChessPlayClick;
+    /**
+     * 当前玩家颜色
+     */
+    int currentChessPlayClick;
 
-	
-	/**
+
+    Timer moveTimer;
+    Timer gameTimer;
+    long moveTimeLimit;  // 每一步棋的时间限制（毫秒）
+    long gameTimeLimit;
+
+    private String logStr = "";
+
+    public static final String helpStr = "象棋，又称中国象棋，是一种两人对弈的棋类游戏。它在中国和中文圈有着悠久的历史和深厚的文化意义。下面是象棋的基本规则：\n" +
+            "\n" +
+            "棋盘和布局：象棋棋盘是一个由9列和10行组成的格线网络，棋子放在交叉点上。棋盘被一条没有格线的河界分成两半，分别代表对弈双方。\n" +
+            "\n" +
+            "棋子：每方有1个将（帅）、2个士（仕）、2个象（相）、2个马、2个车、2个炮和5个兵（卒）。\n" +
+            "\n" +
+            "将/帅：只能在自己的九宫内移动，每次只能走一步，且只能直走或横走。\n" +
+            "士/仕：也只能在九宫内移动，每次走斜线一格。\n" +
+            "象/相：每次走“田”字，即两点之间的距离是两个格的斜线，不能越过河界。\n" +
+            "马：走“日”字形，即先直走一格再斜走一格，如果直走的第一格有棋子堵住（称为蹩马腿），则马不能走这个方向。\n" +
+            "车：直线前进，可以横向或纵向移动，距离不限，但不能越过其他棋子。\n" +
+            "炮：移动时与车类似，但在吃子时，必须跳过一个棋子。\n" +
+            "兵/卒：只能直走，过河后可以左右移动。\n" +
+            "对弈目标：将军对方的将/帅。如果对方的将/帅无法逃脱，则称为“将死”，对弈胜利。\n" +
+            "\n" +
+            "特殊规则：\n" +
+            "\n" +
+            "长将：重复进行相同的将军动作被认为是违规的。\n" +
+            "和棋：在某些重复局面下，双方可能会达成和棋。\n" +
+            "禁手：一些特定的重复动作可能会被视为禁手，具体规则可能因比赛和地区而异。\n" +
+            "象棋的策略和技巧深奥丰富，包括开局、中局和残局的不同战术。对于初学者来说，了解这些基本规则是入门的第一步，随后可以通过实战来提高棋艺。";
+
+    private int logCount;
+
+    /**
 	** 构造函数
 	** 初始化图形用户界面
 	*/
 	ChessMainFrame(String Title, int playType){
+        this.playType = playType;
 		//改变系统默认字体
 		Font font = new Font("Dialog", Font.PLAIN, 12);
 		java.util.Enumeration keys = UIManager.getDefaults().keys();
@@ -137,6 +174,48 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 		//当鼠标放上显示信息
 		text.setToolTipText("信息提示");
 		anew = new JButton(" 新 游 戏 ");
+        anew.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                //注册棋子移动监听
+//                for (int j=0;j<32;j++){
+//                    con.remove(play[j]);
+//                }
+//                con.repaint();
+
+
+                chessPlayClick = 2;
+                TimeSettingDialog dialog = new TimeSettingDialog(ChessMainFrame.this);
+                dialog.setVisible(true);
+                long[] timeLimits = dialog.getTimeLimits();
+                if (timeLimits[0] > 0) {
+                    moveTimeLimit = timeLimits[0];
+                    startMoveTimer();
+                }
+                if (timeLimits[1] > 0) {
+                    gameTimeLimit = timeLimits[1];
+                    startGameTimer();
+                }
+
+                drawChessMan();
+
+                Message move = new Message();
+                move.MsgTYpe = 4;
+                move.moveTimeLimit = moveTimeLimit;
+                move.gameTimeLimit = gameTimeLimit;
+                //网络对战
+                if(server != null){
+                    server.sendMove(move);
+                }else if(client != null) {
+                    client.sendMove(move);
+                }
+
+
+
+            }
+        });
+
 		anew.setToolTipText("重新开始新的一局");
 		exit = new JButton(" 退  出 ");
 		exit.setToolTipText("退出象棋程序程序");
@@ -146,6 +225,22 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
         fail.setToolTipText("认输后游戏重新开始");
         peace = new JButton(" 和 棋 ");
         peace.setToolTipText("和棋后游戏重新开始");
+        log = new JButton(" 记 录 ");
+        log.setToolTipText("查看棋局记录");
+        help = new JButton(" 帮 助 ");
+        help.setToolTipText("介绍游戏规则");
+
+        log.addActionListener(e -> {
+            JOptionPane.showConfirmDialog(
+                    ChessMainFrame.this,logStr,"记录",
+                    JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+        });
+
+        help.addActionListener(e -> {
+            JOptionPane.showConfirmDialog(
+                    ChessMainFrame.this,helpStr,"帮助",
+                    JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+        });
 
 		//把组件添加到工具栏
 		jmain.setLayout(new GridLayout(0,4));
@@ -153,6 +248,8 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 		jmain.add(repent);
         jmain.add(fail);
         jmain.add(peace);
+        jmain.add(log);
+        jmain.add(help);
 		jmain.add(exit);
 		jmain.add(text);
 		jmain.setBounds(0,0,558,30);
@@ -167,17 +264,12 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 		exit.addActionListener(this);
         fail.addActionListener(this);
         peace.addActionListener(this);
-				
-		//注册棋子移动监听
-		for (int i=0;i<32;i++){
-			con.add(play[i]);
-			play[i].addMouseListener(this);
-		}
-		
-		//添加棋盘标签
-		con.add(image = new JLabel(new ImageIcon("image" + File.separator + "Main.GIF")));
-		image.setBounds(0,30,558,620);
-		image.addMouseListener(this);
+
+
+        //添加棋盘标签
+        con.add(image = new JLabel(new ImageIcon("image" + File.separator + "Main.GIF")));
+        image.setBounds(0,30,558,620);
+        image.addMouseListener(this);
 		
 		//注册窗体关闭监听
 		this.addWindowListener(
@@ -211,7 +303,53 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
         startOnline(playType);
 	}
 
-    private void startOnline(int playType) {
+    // 启动整局游戏的计时器
+    public void startGameTimer() {
+        gameTimer = new Timer();
+        gameTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("Game over: Time limit exceeded.");
+                gameTimer.cancel();
+                JOptionPane.showConfirmDialog(
+                        ChessMainFrame.this,"游戏时间到","和棋",
+                        JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+                chessPlayClick=3;
+                text.setText("和棋");
+            }
+        }, gameTimeLimit);
+    }
+
+
+    // 启动当前玩家的计时器
+    public void startMoveTimer() {
+        moveTimer = new Timer();
+        moveTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("Game over: Time limit exceeded.");
+                moveTimer.cancel();
+                if(chessPlayClick == 1){
+                    JOptionPane.showConfirmDialog(
+                            ChessMainFrame.this,"红旗胜利","红旗胜利",
+                            JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+                    text.setText("红棋胜利");
+
+                }else if( chessPlayClick == 2){
+                    JOptionPane.showConfirmDialog(
+                            ChessMainFrame.this,"黑旗胜利","黑旗胜利",
+                            JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+                    text.setText("黑旗胜利");
+                }
+
+                chessPlayClick=3;
+            }
+        }, moveTimeLimit);
+    }
+
+
+
+    public void startOnline(int playType) {
         if (playType == 1) {
             try {
                 server = new ChessServer(12345, this);
@@ -364,6 +502,13 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 		play[31] = new JLabel(in);
 		play[31].setBounds(252,569,55,55);		
 		play[31].setName("帅2");
+
+        //注册棋子移动监听
+        for (int j=0;j<32;j++){
+            con.add(play[j]);
+            play[j].addMouseListener(this);
+        }
+
 	}
 	
 	/**
@@ -413,17 +558,20 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 	*/
 	public void mouseClicked(MouseEvent me){
 
-        if(currentChessPlayClick == 0){
-            currentChessPlayClick = chessPlayClick;
-        }
+        if(playType != 3) {
 
-        //在线对战时，判断当前棋子是否可走
-        if(!currentPlayer()){
-            return;
+            if (currentChessPlayClick == 0) {
+                currentChessPlayClick = chessPlayClick;
+            }
+
+            //在线对战时，判断当前棋子是否可走
+            if (!currentPlayer()) {
+                return;
+            }
         }
 
         Message move = move(me, 0, 0);
-
+        move.MsgTYpe = 1;
         //网络对战
         if(server != null){
             server.sendMove(move);
@@ -502,6 +650,8 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
                     chessPlayClick=1;
                 }
 
+
+
             }//if
 
             //该黑棋走棋的时候
@@ -560,6 +710,9 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 
             //当前没有操作(停止闪烁)
             chessManClick=false;
+
+
+            log(Ex, Ey);
 
         }//if
 
@@ -763,14 +916,43 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
         } else if (source == fail) {
             int result = JOptionPane.showConfirmDialog(this, "你确定要认输吗？", "认输确认", JOptionPane.YES_NO_OPTION);
             if (result == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(this, "你已认输，游戏重新开始！");
-                resetGame();
+                if(chessPlayClick == 1){
+                    JOptionPane.showConfirmDialog(
+                            ChessMainFrame.this,"红旗胜利","红旗胜利",
+                            JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+                    text.setText("红棋胜利");
+
+                }else if( chessPlayClick == 2){
+                    JOptionPane.showConfirmDialog(
+                            ChessMainFrame.this,"黑旗胜利","黑旗胜利",
+                            JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+                    text.setText("黑旗胜利");
+                }
+
+                Message msg = new Message();
+                msg.MsgTYpe = 2;
+                //网络对战
+                if(server != null){
+                    server.sendMove(msg);
+                }else if(client != null) {
+                    client.sendMove(msg);
+                }
+
+
             }
         } else if (source == peace) {
             int result = JOptionPane.showConfirmDialog(this, "你确定要和棋吗？", "和棋确认", JOptionPane.YES_NO_OPTION);
             if (result == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(this, "双方和棋，游戏重新开始！");
+                JOptionPane.showMessageDialog(this, "双方和棋！");
                 resetGame();
+            }
+            Message msg = new Message();
+            msg.MsgTYpe = 3;
+            //网络对战
+            if(server != null){
+                server.sendMove(msg);
+            }else if(client != null) {
+                client.sendMove(msg);
             }
         }  else if (source == exit) {
             System.exit(0);
@@ -797,7 +979,7 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 				
 				//向右移动、得到终点的坐标模糊成合法的坐标、必须过河				
 				else if (play.getY() > 284 && (me.getX() - play.getX()) >= 57 && (me.getX() - play.getX()) <= 112){
-					play.setBounds(play.getX()+57,play.getY(),55,55);	
+					play.setBounds(play.getX()+57,play.getY(),55,55);
 				}
 				
 				//向左移动、得到终点的坐标模糊成合法的坐标、必须过河
@@ -2194,6 +2376,19 @@ class ChessMainFrame extends JFrame implements ActionListener,MouseListener,Runn
 
         // 重新绘制界面
         repaint();
+    }
+
+    private void log(int x, int y){
+        JLabel jLabel = play[Man];
+        int moveX = (jLabel.getX() - x) /55;
+        int moveY = (jLabel.getY() - y) /55;
+        String moveXAction = moveX > 0 ? "左移" : "右移";
+        String moveYAction = moveY > 0 ? "上移" : "下移";
+        if(moveX != 0 || moveY != 0) {
+            logStr = String.format("第%s步：%s %s %s 格， %s %s 格 \n",
+                    ++logCount, jLabel.getName(), moveYAction, Math.abs(moveY), moveXAction, Math.abs(moveX)) + logStr;
+        }
+
     }
 	
 }//主框架类

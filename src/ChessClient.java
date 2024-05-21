@@ -1,6 +1,7 @@
-import java.io.*;
-import java.net.*;
-import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
 public class ChessClient {
     private Socket socket;
@@ -30,10 +31,8 @@ public class ChessClient {
         byte[] buffer = new byte[1024];
         int bytesRead = in.read(buffer);
         if (bytesRead != -1) {
-            Message msg = (Message) EventUtils.deserializeEvent(buffer);
-            frame.move(msg.mouseEvent(), msg.moveType, msg.movePiece);
-            // 处理接收到的 MouseEvent
-            System.out.println("从服务器接收到的移动: " + msg);
+            Message me = (Message) EventUtils.deserializeEvent(buffer);
+            EventUtils.dealMsg(me, frame);
         }
     }
 }

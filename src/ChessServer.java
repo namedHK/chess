@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.io.*;
 import java.net.*;
 
@@ -52,15 +53,15 @@ public class ChessServer implements Serializable {
                     int bytesRead = in.read(buffer);
                     if (bytesRead != -1) {
                         Message me = (Message) EventUtils.deserializeEvent(buffer);
-                        frame.move(me.mouseEvent(), me.moveType, me.movePiece);
-                        // 处理接收到的 MouseEvent
-                        System.out.println("接收到的移动: " + me);
+                        EventUtils.dealMsg(me, frame);
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             }
         }
+
+
     }
 
 }

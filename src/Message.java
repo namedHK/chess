@@ -15,6 +15,9 @@ public class Message implements Serializable {
         this.movePiece = movePiece;
     }
 
+    public Message() {
+    }
+
     MouseEvent mouseEvent;
 
     /**
@@ -29,6 +32,24 @@ public class Message implements Serializable {
      */
     int movePiece;
 
+    /**
+     * 1. 关于棋子
+     * 2. 认输
+     * 3. 投降
+     * 4. 设置游戏时间
+     */
+    int MsgTYpe;
+
+    /**
+     * 每一步棋的时间限制（毫秒）
+     *
+     */
+    long moveTimeLimit;
+
+    /**
+     * 每一局棋的时间限制（毫秒）
+     */
+    long gameTimeLimit;
 
     public MouseEvent mouseEvent(){
         return mouseEvent;

@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.io.*;
 
@@ -15,5 +16,30 @@ public class EventUtils {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInputStream ois = new ObjectInputStream(bis);
         return  ois.readObject();
+    }
+
+    public static void dealMsg(Message me, ChessMainFrame frame) {
+        if(me.MsgTYpe == 1) {
+            frame.move(me.mouseEvent(), me.moveType, me.movePiece);
+        }else if(me.MsgTYpe == 2){
+            if(frame.chessPlayClick == 2){
+                JOptionPane.showConfirmDialog(
+                        frame,"ºìÆìÊ¤Àû","ºìÆìÊ¤Àû",
+                        JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+            }else if( frame.chessPlayClick == 1){
+                JOptionPane.showConfirmDialog(
+                        frame,"ºÚÆìÊ¤Àû","ºÚÆìÊ¤Àû",
+                        JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+            }
+        }else if(me.MsgTYpe == 3){
+            JOptionPane.showConfirmDialog(
+                    frame,"Ë«·½ºÍÆå£¡","ºÍÆå",
+                    JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE);
+        }else if(me.MsgTYpe == 4){
+            frame.moveTimeLimit = me.moveTimeLimit;
+            frame.gameTimeLimit = me.gameTimeLimit;
+            frame.startGameTimer();
+            frame.startMoveTimer();
+        }
     }
 }
